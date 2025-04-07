@@ -1,0 +1,33 @@
+[package]
+name = "mlkem"
+version = "0.1.0"
+edition = "2024"
+authors = ["PinHao Chen <pinhaocrypto@gmail.com>"]
+description = "A Rust implementation of the ML-KEM (Module-Lattice based Key Encapsulation Mechanism) post-quantum cryptographic algorithm"
+license = "MIT"
+repository = "https://github.com/pinhaocrypto/rust_mlkem"
+readme = "README.md"
+keywords = ["cryptography", "post-quantum", "kem", "lattice", "mlkem"]
+categories = ["cryptography", "no-std"]
+
+[lib]
+name = "mlkem"
+path = "src/lib.rs"
+
+[features]
+default = ["ref"]
+ref = []
+avx2 = []
+neon = []
+avx512 = []
+
+[dependencies]
+sha3 = "0.10.8"
+rand = "0.8.5"
+byteorder = "1.5.0"
+thiserror = "1.0.48"
+zeroize = { version = "1.6.0", features = ["zeroize_derive"] }
+
+[[example]]
+name = "simple_kem"
+path = "examples/simple_kem.rs"
