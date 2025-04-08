@@ -10,7 +10,8 @@
 #![cfg_attr(not(test), no_std)]
 
 // Reference the ML-KEM-512 implementation using the path attribute
-#[path = "mlkem-512/clean/mod.rs"]
+// #[path = "mlkem-512/clean/mod.rs"]
+#[path = "mlkem-512/mod.rs"]
 pub mod mlkem_512;
 
 // Re-export primary API from mlkem_512
@@ -21,11 +22,12 @@ pub mod mlkem512 {
     pub use crate::mlkem_512::*;
 }
 
+// todo
 // Public constants for ML-KEM variants
-pub const MLKEM512_PUBLIC_KEY_BYTES: usize = crate::mlkem_512::PUBLIC_KEY_BYTES;
-pub const MLKEM512_SECRET_KEY_BYTES: usize = crate::mlkem_512::SECRET_KEY_BYTES;
-pub const MLKEM512_CIPHERTEXT_BYTES: usize = crate::mlkem_512::CIPHERTEXT_BYTES;
-pub const MLKEM512_SHARED_SECRET_BYTES: usize = crate::mlkem_512::SHARED_SECRET_BYTES;
+// pub const MLKEM512_PUBLIC_KEY_BYTES: usize = crate::mlkem_512::PUBLIC_KEY_BYTES;
+// pub const MLKEM512_SECRET_KEY_BYTES: usize = crate::mlkem_512::SECRET_KEY_BYTES;
+// pub const MLKEM512_CIPHERTEXT_BYTES: usize = crate::mlkem_512::CIPHERTEXT_BYTES;
+// pub const MLKEM512_SHARED_SECRET_BYTES: usize = crate::mlkem_512::SHARED_SECRET_BYTES;
 
 pub const MLKEM768_PUBLIC_KEY_BYTES: usize = 1184;
 pub const MLKEM768_SECRET_KEY_BYTES: usize = 2400;
