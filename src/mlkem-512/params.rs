@@ -27,7 +27,7 @@ pub const POLYBYTES: usize = 384;
 pub const LEVEL: usize = 512;
 /// Dimension K of vectors and matrices for ML-KEM-512.
 pub const K: usize = 2;
-/// Noise parameter eta_1 for secret key `s` and error `e1` for ML-KEM-512.
+/// Noise parameter eta_1 for secret key `s` and error `e1` for ML-KEM-512, correspond to [FIPS 203, Section 8, Table2]
 pub const ETA1: usize = 3;
 /// Noise parameter eta_2 for secret key `e` and ciphertext error `e2`. Always 2 for ML-KEM.
 pub const ETA2: usize = 2;
