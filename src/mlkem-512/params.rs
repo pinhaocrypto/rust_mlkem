@@ -63,3 +63,7 @@ pub const KEM_CIPHERTEXTBYTES: usize = INDCPA_BYTES; // 768
 /// Size in bytes of the KEM secret key.
 /// (IND-CPA sk + IND-CPA pk + H(pk) + implicit rejection value `z`).
 pub const KEM_SECRETKEYBYTES: usize = INDCPA_SECRETKEYBYTES + INDCPA_PUBLICKEYBYTES + SYMBYTES + SYMBYTES; // 768 + 800 + 32 + 32 = 1632
+
+// --- System Parameters ---
+pub const UINT8_MAX: i32 = 255;
+pub const UINT16_MAX: i32 = 65535;
