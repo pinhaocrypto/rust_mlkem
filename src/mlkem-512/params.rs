@@ -7,9 +7,9 @@
 /// Dimension of the polynomial ring R_q = Z_q[X]/(X^N + 1). Always 256 for ML-KEM.
 pub const N: usize = 256;
 /// Modulus Q. Always 3329 for ML-KEM.
-pub const Q: usize = 3329;
+pub const Q: i32 = 3329;
 /// (Q + 1) / 2, used for centered representations or reductions.
-pub const Q_HALF: usize = (Q + 1) / 2; // = 1665
+pub const Q_HALF: i32 = (Q + 1) / 2; // = 1665
 /// Limit for 12-bit unsigned integers, relevant for coefficient packing/unpacking.
 pub const UINT12_LIMIT: usize = 4096;
 

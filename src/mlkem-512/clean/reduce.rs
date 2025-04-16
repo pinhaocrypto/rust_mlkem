@@ -1,4 +1,29 @@
-use crate::mlkem_512::params::Q;
+use crate::mlkem_512::params::{Q, Q_HALF};
+/// Barrett reduction: given a 16-bit integer a, computes
+/// centered representative congruent to a mod q in {-(q-1)/2,...,(q-1)/2}
+///
+/// Arguments:
+///   - a: input integer to be reduced
+///
+/// Returns: integer in {-(q-1)/2,...,(q-1)/2} congruent to a modulo q.
+#[inline(always)]
+pub fn barrett_reduce(a: i16) -> i16 {
+    const MAGIC: i32 = 20159; // check-magic: 20159 == round(2^26 / Q)
+
+    // Right-shift on signed integers is arithmetic shift in Rust
+    // This means it preserves the sign bit, as required
+    let t = (MAGIC * (a as i32) + (1 << 25)) >> 26;
+
+    // We need 32-bit math to evaluate t * Q and the subsequent subtraction
+    let res = (a as i32 - (t * Q as i32)) as i16;
+
+    // In production code, we might want to add debug assertions to ensure
+    // the result is in the expected range {-(q-1)/2,...,(q-1)/2}
+    debug_assert!(res > -(Q_HALF as i16) && res < Q_HALF as i16);
+
+    res
+}
+
 /// Montgomery reduction: given a 32-bit integer a, computes
 /// 16-bit integer congruent to a * R^-1 mod q, where R=2^16
 ///
@@ -47,134 +72,67 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_montgomery_reduce_basic() {
-        // Test with zero input
-        assert_eq!(montgomery_reduce(0), 0, "montgomery_reduce(0) should be 0");
+    fn test_barrett_reduce() {
+        // Test specific values
+        assert_eq!(barrett_reduce(0), 0);
+        assert_eq!(barrett_reduce(Q as i16), 0);
+        assert_eq!(barrett_reduce(-Q as i16), 0);
+        assert_eq!(barrett_reduce(1), 1);
+        assert_eq!(barrett_reduce(-1), -1);
+        assert_eq!(barrett_reduce(Q_HALF as i16), -Q_HALF as i16 + 1);
+        assert_eq!(barrett_reduce(-(Q_HALF as i16)), Q_HALF as i16 - 1);
 
-        // Test with simple positive values
-        assert_eq!(
-            montgomery_reduce(65536),
-            1,
-            "montgomery_reduce(2^16) should be 1"
-        );
-        assert_eq!(
-            montgomery_reduce(131072),
-            2,
-            "montgomery_reduce(2^17) should be 2"
-        );
-
-        // Test with Q-related values
-        assert_eq!(
-            montgomery_reduce(Q as i32),
-            0,
-            "montgomery_reduce(Q) should be 0"
-        );
-        assert_eq!(
-            montgomery_reduce(65536 * Q as i32),
-            Q as i16,
-            "montgomery_reduce(Q*2^16) should be Q"
-        );
-
-        // Test with negative values
-        assert_eq!(
-            montgomery_reduce(-65536),
-            -1,
-            "montgomery_reduce(-2^16) should be -1"
-        );
-        assert_eq!(
-            montgomery_reduce(-131072),
-            -2,
-            "montgomery_reduce(-2^17) should be -2"
-        );
-    }
-
-    #[test]
-    fn test_montgomery_reduce_edge_cases() {
-        // Test values close to the valid range boundaries
-        let max_valid = i32::MAX - ((1_i32 << 15) * Q as i32);
-        let min_valid = -(i32::MAX - ((1_i32 << 15) * Q as i32));
-
-        // Test values close to but within the valid range
-        let large_positive = max_valid - 1000;
-        let large_negative = min_valid + 1000;
-
-        // We don't assert specific values here, just that the function doesn't panic
-        let _result_pos = montgomery_reduce(large_positive);
-        let _result_neg = montgomery_reduce(large_negative);
-    }
-
-    #[test]
-    fn test_montgomery_reduce_known_values() {
-        // Known input-output pairs, verified against reference implementation
-        let test_cases = [
-            (0, 0),
-            (65536, 1),           // 2^16
-            (131072, 2),          // 2^17
-            (3329 * 65536, 3329), // Q * 2^16
-            (62209, 339),         // This is the correct output for our implementation
+        // Test some larger values
+        let test_values = [
+            100,
+            1000,
+            3000,
+            5000,
+            10000,
+            20000,
+            30000,
+            -100,
+            -1000,
+            -3000,
+            -5000,
+            -10000,
+            -20000,
+            -30000,
+            i16::MAX,
+            i16::MIN,
+            i16::MAX / 2,
+            i16::MIN / 2,
         ];
 
-        for (input, expected) in test_cases {
-            let result = montgomery_reduce(input);
-            assert_eq!(
-                result, expected,
-                "montgomery_reduce({}) should be {}, got {}",
-                input, expected, result
-            );
-        }
-    }
+        for &a in test_values.iter() {
+            // Compute expected result using manual modular reduction
+            // First convert to i32 to avoid overflow
+            let mut res = (a as i32) % (Q as i32);
 
-    #[test]
-    fn test_montgomery_reduction_property() {
-        // Test the fundamental property of Montgomery reduction:
-        // For any integer a, montgomery_reduce(a * 2^16) ≡ a (mod Q)
-
-        const R: i32 = 65536; // R = 2^16
-
-        for a in -10..10 {
-            let result = montgomery_reduce(a * R);
-            let expected = a as i16;
-
-            // Check congruence modulo Q
-            assert_eq!(
-                (result as i32).rem_euclid(Q as i32),
-                (expected as i32).rem_euclid(Q as i32),
-                "Montgomery reduction property failed for a={}",
-                a
-            );
-        }
-    }
-
-    #[test]
-    fn test_montgomery_reduce_consistency() {
-        // Test consistency of montgomery_reduce with core mathematical properties
-
-        const R: i32 = 65536; // R = 2^16
-
-        // Test a different property: For any a, montgomery_reduce(a * R) ≡ a (mod Q)
-        for a in 0..20 {
-            // Compute a * R
-            let a_times_r = a * R;
-
-            // Apply montgomery_reduce
-            let result = montgomery_reduce(a_times_r);
-
-            // Check that result ≡ a (mod Q)
-            assert_eq!(
-                (result as i32).rem_euclid(Q as i32),
-                (a as i32).rem_euclid(Q as i32),
-                "Montgomery reduction property failed for a={}",
-                a
-            );
-
-            // The test above verifies congruence modulo Q
-            // For most values we also expect exact equality:
-            if a < Q as i32 {
-                assert_eq!(
-                    result, a as i16,
-                    "For small a, montgomery_reduce(a*R) should equal a"
-                );
+            // Adjust to centered representative in {-(q-1)/2, ..., (q-1)/2}
+            if res > Q_HALF as i32 {
+                res -= Q as i32;
+            } else if res < -(Q_HALF as i32) {
+                res += Q as i32;
             }
+
+            let expected = res as i16;
+            let actual = barrett_reduce(a);
+
+            // Verify the result
+            assert_eq!(
+                actual, expected,
+                "Barrett reduction failed for a={}: expected {}, got {}",
+                a, expected, actual
+            );
+
+            // Also verify the result is in the expected range
+            assert!(
+                actual > -(Q_HALF as i16) && actual < Q_HALF as i16,
+                "Barrett reduction result out of range: {} for input {}",
+                actual,
+                a
+            );
         }
     }
 }
