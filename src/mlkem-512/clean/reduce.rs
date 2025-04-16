@@ -33,12 +33,6 @@ pub fn barrett_reduce(a: i16) -> i16 {
 ///
 /// Returns: integer congruent to a * R^-1 modulo q, with absolute value
 ///     <= ceil(|a| / 2^16) + (Q + 1)/2
-/// We first take the modulo of 'a' because it's a 32-bit integer. If we were to
-/// multiply 'a' directly with QINV without taking the modulo first, the intermediate
-/// result would be a 32-bit or higher value.
-/// If 'a' itself is large, the product could exceed the range that can be
-/// represented by a 32-bit integer, leading to overflow (and in the case of
-/// signed integers, even undefined behavior).
 #[inline(always)]
 pub fn montgomery_reduce(a: i32) -> i16 {
     // q^(-1) mod 2^16
@@ -58,6 +52,30 @@ pub fn montgomery_reduce(a: i32) -> i16 {
     r as i16
 }
 
+/// Montgomery multiplication modulo Q
+///
+/// Arguments:
+///   - a: first factor. Can be any i16 value.
+///   - b: second factor. Must be signed canonical (abs value < (Q+1)/2)
+///
+/// Returns: 16-bit integer congruent to a*b*R^(-1) mod Q, and
+/// smaller than Q in absolute value.
+#[inline(always)]
+pub fn fqmul(a: i16, b: i16) -> i16 {
+    debug_assert!(
+        b > -(Q_HALF as i16) && b < Q_HALF as i16,
+        "b out of bounds: {}",
+        b
+    );
+    let result = montgomery_reduce((a as i32) * (b as i32));
+    debug_assert!(
+        result > -(Q as i16) && result < Q as i16,
+        "result out of bounds: {}",
+        result
+    );
+    result
+}
+
 use crate::mlkem512::params::N;
 
 /// Represents a polynomial in the ring R_q = Z_q[X]/(X^n + 1)
@@ -70,6 +88,7 @@ pub struct Poly {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::prelude::*;
 
     #[test]
     fn test_barrett_reduce() {
@@ -129,10 +148,25 @@ mod tests {
             // Also verify the result is in the expected range
             assert!(
                 actual > -(Q_HALF as i16) && actual < Q_HALF as i16,
-                "Barrett reduction result out of range: {} for input {}",
+                "Barrett reduction result out of range: {}",
                 actual,
-                a
             );
+        }
+    }
+
+    #[test]
+    fn test_fqmul() {
+        // random generate i16 values
+        let mut rng = rand::rng();
+        for _ in 0..100 {
+            let a = rng.random_range(i16::MIN..i16::MAX);
+            let b = rng.random_range((-(Q_HALF as i16) +1)..Q_HALF as i16);
+            let prod = (a as i32) * (b as i32);
+            let q_i16 = Q as i16;
+            let mut expected = prod as i16 % q_i16;
+            expected = montgomery_reduce(prod);
+            let actual = fqmul(a, b);
+            assert_eq!(actual, expected);
         }
     }
 }
