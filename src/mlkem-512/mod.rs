@@ -6,11 +6,12 @@
 //! ML-KEM-512 implementation: A post-quantum key encapsulation mechanism.
 
 pub mod params;
-pub mod poly;
 pub mod polyvec;
+pub mod poly;
 pub mod symmetric;
 pub mod indcpa;
 pub mod kem;
+
 
 pub mod clean;
 // pub mod avx2;

@@ -8,6 +8,7 @@
 // Module exports
 pub mod cbd;
 pub mod ntt;
+pub mod poly;
 pub mod reduce;
 
 // Re-export primary API

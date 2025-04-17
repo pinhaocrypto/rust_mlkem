@@ -15,8 +15,8 @@ name = "mlkem"
 path = "src/lib.rs"
 
 [features]
-default = ["ref"]
-ref = []
+default = ["clean"]
+clean = []
 avx2 = []
 neon = []
 avx512 = []

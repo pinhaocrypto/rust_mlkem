@@ -153,9 +153,7 @@ mod tests {
             let a = rng.random_range(i16::MIN..i16::MAX);
             let b = rng.random_range((-(Q_HALF as i16) +1)..Q_HALF as i16);
             let prod = (a as i32) * (b as i32);
-            let q_i16 = Q as i16;
-            let mut expected = prod as i16 % q_i16;
-            expected = montgomery_reduce(prod);
+            let expected = montgomery_reduce(prod);
             let actual = fqmul(a, b);
             assert_eq!(actual, expected);
         }
