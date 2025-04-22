@@ -12,18 +12,10 @@ pub mod symmetric;
 pub mod indcpa;
 pub mod kem;
 
+pub mod backend;            // 前面那個 backend/mod.rs
 
-pub mod clean;
-// pub mod avx2;
-// pub mod avx512;
-// pub mod neon;
+// Re-export public APIs from the backend module (such as poly_reduce, barrett_reduce, etc.)
+// so they can be accessed directly from this module without the backend:: prefix.
 
-
-// pub use clean::{
-//     PUBLIC_KEY_BYTES,
-//     SECRET_KEY_BYTES,
-//     CIPHERTEXT_BYTES,
-//     SHARED_SECRET_BYTES,
-// };
-
-// pub use kem::{keypair, encapsulate, decapsulate};
+pub use backend::*;
+pub use backend::poly_tomont;

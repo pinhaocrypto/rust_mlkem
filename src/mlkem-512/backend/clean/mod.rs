@@ -19,3 +19,5 @@ pub const PUBLIC_KEY_BYTES: usize = 800;
 pub const SECRET_KEY_BYTES: usize = 1632;
 pub const CIPHERTEXT_BYTES: usize = 768;
 pub const SHARED_SECRET_BYTES: usize = 32;
+
+pub use crate::mlkem512::backend::clean::poly::poly_tomont;
