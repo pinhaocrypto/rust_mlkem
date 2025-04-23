@@ -11,6 +11,7 @@ pub mod poly;
 pub mod symmetric;
 pub mod indcpa;
 pub mod kem;
+pub mod zetas;
 
 pub mod backend;            // 前面那個 backend/mod.rs
 

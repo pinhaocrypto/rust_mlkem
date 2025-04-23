@@ -1,6 +1,5 @@
-use crate::mlkem512::params::{N, Q};
 use crate::mlkem512::backend;
-
+use crate::mlkem512::params::{N, Q};
 
 /// Represents a polynomial in the ring R_q = Z_q[X]/(X^n + 1)
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -15,12 +14,12 @@ impl Poly {
     pub fn new() -> Self {
         Self { coeffs: [0; N] }
     }
-    
+
     pub fn poly_tomont(&mut self) {
         backend::poly_tomont(self);
     }
 
-    pub fn scalar_signed_to_unsigned_q(c: i16) -> u16{
+    pub fn scalar_signed_to_unsigned_q(c: i16) -> u16 {
         // This is currently a branch-based implementation; it should be replaced with a branchless version to prevent side-channel attacks.
         if c < 0 {
             (c + Q as i16) as u16
@@ -61,15 +60,22 @@ impl Poly {
 
     #[inline]
     pub fn ntt_butterfly_block(&mut self, zeta: i16, start: usize, len: usize) {
-        let coeffs = &mut self.coeffs;
-        for j in start..start + len {
-            let t: i16 = crate::mlkem512::backend::reduce::fqmul(coeffs[j + len], zeta);
-            coeffs[j + len] = coeffs[j] - t;
-            coeffs[j]       = coeffs[j] + t;
-        }
+        backend::ntt::ntt_butterfly_block(self, zeta, start, len);
     }
-    
+
+    // #[inline]
+    // pub fn ntt_layer(&mut self, layer: usize) {
+    //     backend::ntt::ntt_layer(self, layer);
+    // }
+
+    // #[inline]
+    // pub fn poly_ntt(&mut self) {
+    //     backend::ntt::poly_ntt(self);
+    // }
+
+    // #[inline]
+    // pub fn poly_invntt_tomont(&mut self) {
+    //     backend::ntt::poly_invntt_tomont(self);
+    // }
+
 }
-
-
-
