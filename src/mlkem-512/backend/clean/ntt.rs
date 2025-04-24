@@ -1,6 +1,14 @@
-use crate::mlkem512::params::N;
+use crate::mlkem512::params::{N, Q};
 use crate::mlkem512::poly::Poly;
 use crate::mlkem512::zetas::ZETAS;
+use crate::mlkem512::backend::reduce::{barrett_reduce, fqmul};
+
+// Absolute exclusive upper bound for the output of the forward NTT
+pub const NTT_BOUND: i32 = 8 * Q as i32;
+
+// Absolute exclusive upper bound for the output of the inverse NTT
+pub const INVNTT_BOUND: i32 = 8 * Q as i32;
+
 /// Performs a block of Cooley–Tukey NTT butterfly operations on polynomial coefficients in-place,
 /// using a fixed twiddle factor and Montgomery multiplication.
 ///
@@ -49,10 +57,81 @@ pub fn ntt_layer(
     layer: usize,
 ) {
     let len = N >> layer;
-    let mut k = 1 << (layer-1);
+    let mut k = 1 << (layer - 1);
+
     for start in (0..N).step_by(2 * len) {
         let zeta = ZETAS[k];
         k += 1;
         ntt_butterfly_block(poly, zeta, start, len);
     }
+}
+
+#[inline]
+pub fn poly_ntt(poly: &mut Poly) {
+    debug_assert!(poly.coeffs.iter().all(|&c| (c as i32).abs() < Q as i32));
+
+    for layer in 1..=7 {
+        ntt_layer(poly, layer);
+        #[cfg(debug_assertions)]
+        {
+            let bound = layer as i32 * Q as i32;
+            debug_assert!(poly.coeffs.iter().all(|&c| (c as i32).abs() <= bound));
+        }
+    }
+    debug_assert!(poly
+        .coeffs
+        .iter()
+        .all(|&c| (c as i32).abs() <= NTT_BOUND as i32));
+}
+
+#[inline]
+pub fn invntt_layer(
+    poly: &mut Poly, 
+    layer: usize
+) {
+    debug_assert!((1..=7).contains(&layer), "invalid invNTT layer");
+
+    let coeffs = &mut poly.coeffs;
+    let len = N >> layer;                    
+    let mut k = (1 << layer) - 1;            
+
+    for start in (0..N).step_by(2 * len) {
+        let zeta = ZETAS[k];
+        k -= 1;
+
+        for j in start..start + len {
+            let t = coeffs[j];
+            let sum = t as i32 + coeffs[j + len] as i32;
+            let v = barrett_reduce(sum as i16);
+            coeffs[j] = v;
+
+            let diff = coeffs[j + len] - t;
+            coeffs[j + len] = fqmul(diff, zeta);
+        }
+    }
+
+    debug_assert!(
+        coeffs.iter().all(|&c| (c as i32).abs() < crate::mlkem512::params::Q as i32),
+        "invNTT layer output out of bound"
+    );
+
+}
+
+#[inline]
+pub fn invntt_tomont(poly: &mut Poly) {
+    const F: i16 = 1441;
+    for c in &mut poly.coeffs {
+        *c = fqmul(*c, F);
+    }
+
+    // run invNTT layers from layer=7 down to 1
+    for layer in (1..=7).rev() {
+        invntt_layer(poly, layer);
+    }
+
+    // final bound check: |c| < INVNTT_BOUND
+    debug_assert!(
+        poly.coeffs.iter().all(|&c| (c as i32).abs() < INVNTT_BOUND as i32),
+        "invNTT output exceeded bound"
+    );
 }

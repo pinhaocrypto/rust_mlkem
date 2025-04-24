@@ -42,7 +42,7 @@ pub fn montgomery_reduce(a: i32) -> i16 {
     let a_reduced = (a & 0xFFFF) as u32;
     let a_inverted = ((a_reduced * QINV) & 0xFFFF) as i16;
 
-    assert!(
+    debug_assert!(
         a < i32::MAX - ((1_i32 << 15) * Q as i32) && a > -(i32::MAX - ((1_i32 << 15) * Q as i32))
     );
 
