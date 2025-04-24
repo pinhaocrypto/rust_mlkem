@@ -1,10 +1,10 @@
-pub mod clean;
+pub mod reference;
 // pub mod avx2;
 // pub mod avx512;
 // pub mod neon;
 
 #[cfg(feature = "clean")]
-pub use crate::mlkem_512::backend::clean::*;
+pub use crate::mlkem_512::backend::reference::*;
 
 #[cfg(feature = "avx2")]
 pub use crate::mlkem_512::backend::avx2::*;
