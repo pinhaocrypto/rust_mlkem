@@ -13,7 +13,7 @@ pub mod indcpa;
 pub mod kem;
 pub mod zetas;
 
-pub mod backend;            // 前面那個 backend/mod.rs
+pub mod backend;           
 
 // Re-export public APIs from the backend module (such as poly_reduce, barrett_reduce, etc.)
 // so they can be accessed directly from this module without the backend:: prefix.

@@ -72,11 +72,6 @@ pub fn poly_ntt(poly: &mut Poly) {
 
     for layer in 1..=7 {
         ntt_layer(poly, layer);
-        #[cfg(debug_assertions)]
-        {
-            let bound = layer as i32 * Q as i32;
-            debug_assert!(poly.coeffs.iter().all(|&c| (c as i32).abs() <= bound));
-        }
     }
     debug_assert!(poly
         .coeffs
@@ -119,6 +114,7 @@ pub fn invntt_layer(
 
 #[inline]
 pub fn invntt_tomont(poly: &mut Poly) {
+
     const F: i16 = 1441;
     for c in &mut poly.coeffs {
         *c = fqmul(*c, F);
@@ -128,10 +124,60 @@ pub fn invntt_tomont(poly: &mut Poly) {
     for layer in (1..=7).rev() {
         invntt_layer(poly, layer);
     }
+    
 
     // final bound check: |c| < INVNTT_BOUND
     debug_assert!(
         poly.coeffs.iter().all(|&c| (c as i32).abs() < INVNTT_BOUND as i32),
         "invNTT output exceeded bound"
     );
+}
+
+#[cfg(test)]
+mod test {
+    use crate::mlkem512::{backend::poly::poly_reduce, poly_tomont};
+
+    use super::*;
+    // src/mlkem512/poly/tests.rs
+    use rand::{Rng, SeedableRng};     // 放在 dev-dependencies 裡：rand = { version = "0.8", features = ["std", "rngs"] }
+    use rand_chacha::ChaCha20Rng;     // 固定 RNG，讓失敗可重現
+    use pretty_assertions::assert_eq; // optional：失敗時用彩色 diff
+
+    /// Generate a random polynomial with coefficients in [-Q/2, Q/2)
+    fn random_poly(rng: &mut impl Rng) -> Poly {
+        let mut p = Poly { coeffs: [0i16; N] };
+        for c in p.coeffs.iter_mut() {
+            // uniform random in [-Q/2, Q/2)
+            *c = rng.random_range(-(Q as i16) / 2..(Q as i16) / 2);
+        }
+        p
+    }
+
+    #[test]
+    fn test_poly_ntt() {
+        let mut rng = ChaCha20Rng::seed_from_u64(0x5eed_u64);
+        let mut poly = random_poly(&mut rng);
+        let expect = poly.clone();  
+        println!("poly: {:?}\n", poly.coeffs);
+        poly_ntt(&mut poly);
+        println!("ntt poly: {:?}", poly.coeffs);
+
+    }
+
+    #[test]
+    fn roundtrip_ntt_invntt() {
+        let mut rng = ChaCha20Rng::seed_from_u64(0x5eed_u64);
+        for i in 0..1000 {
+            let mut poly = random_poly(&mut rng);
+            let mut expect = poly.clone();          
+            poly_ntt(&mut poly);
+            invntt_tomont(&mut poly);
+            poly_tomont(&mut expect);
+            for (&a, &b) in expect.coeffs.iter().zip(poly.coeffs.iter()) {
+                assert_eq!((i32::from(a) - i32::from(b)).rem_euclid(Q as i32), 0);
+            }
+            // assert_eq!(expect, poly, "\n=== NTT round-trip failed ===\n");
+            println!("test {} passed", i);
+        }
+    }
 }

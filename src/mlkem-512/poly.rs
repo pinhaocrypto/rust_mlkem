@@ -63,15 +63,15 @@ impl Poly {
         backend::ntt::ntt_butterfly_block(self, zeta, start, len);
     }
 
-    // #[inline]
-    // pub fn ntt_layer(&mut self, layer: usize) {
-    //     backend::ntt::ntt_layer(self, layer);
-    // }
+    #[inline]
+    pub fn ntt_layer(&mut self, layer: usize) {
+        backend::ntt::ntt_layer(self, layer);
+    }
 
-    // #[inline]
-    // pub fn poly_ntt(&mut self) {
-    //     backend::ntt::poly_ntt(self);
-    // }
+    #[inline]
+    pub fn poly_ntt(&mut self) {
+        backend::ntt::poly_ntt(self);
+    }
 
     // #[inline]
     // pub fn poly_invntt_tomont(&mut self) {
