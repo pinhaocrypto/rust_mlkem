@@ -6,7 +6,7 @@ use crate::mlkem_512::params::{Q, Q_HALF};
 ///   - a: input integer to be reduced
 ///
 /// Returns: integer in {-(q-1)/2,...,(q-1)/2} congruent to a modulo q.
-#[inline(always)]
+// #[inline(always)]
 pub fn barrett_reduce(a: i16) -> i16 {
     const MAGIC: i32 = 20159; // check-magic: 20159 == round(2^26 / Q)
 
@@ -15,7 +15,7 @@ pub fn barrett_reduce(a: i16) -> i16 {
     let t = (MAGIC * (a as i32) + (1 << 25)) >> 26;
 
     // We need 32-bit math to evaluate t * Q and the subsequent subtraction
-    let res = (a as i32 - (t * Q as i32)) as i16;
+    let res = (a as i32 - (t * Q)) as i16;
 
     // In production code, we might want to add debug assertions to ensure
     // the result is in the expected range {-(q-1)/2,...,(q-1)/2}
@@ -43,11 +43,11 @@ pub fn montgomery_reduce(a: i32) -> i16 {
     let a_inverted = ((a_reduced * QINV) & 0xFFFF) as i16;
 
     debug_assert!(
-        a < i32::MAX - ((1_i32 << 15) * Q as i32) && a > -(i32::MAX - ((1_i32 << 15) * Q as i32))
+        a < i32::MAX - ((1_i32 << 15) * Q) && a > -(i32::MAX - ((1_i32 << 15) * Q))
     );
 
     // Compute r = (a - a_inverted * Q) >> 16
-    let r = (a - (a_inverted as i32) * (Q as i32)) >> 16;
+    let r = (a - (a_inverted as i32) * Q) >> 16;
 
     r as i16
 }

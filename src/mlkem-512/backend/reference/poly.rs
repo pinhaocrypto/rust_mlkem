@@ -1,5 +1,6 @@
 use crate::mlkem512::poly::Poly;
 use crate::mlkem512::reference::reduce::{barrett_reduce, fqmul};
+use crate::mlkem512::params::POLYCOMPRESSEDBYTES_DV;
 
 // Implementation-specific functions
 pub fn poly_tomont(r: &mut Poly) {
@@ -16,4 +17,8 @@ pub fn poly_reduce(r: &mut Poly) {
         let u: u16 = Poly::scalar_signed_to_unsigned_q(*coeff);
         *coeff = u as i16;
     });
+}
+
+pub fn poly_compress(r: &mut Poly, a: &mut [u8; POLYCOMPRESSEDBYTES_DV]) {
+    unimplemented!()
 }

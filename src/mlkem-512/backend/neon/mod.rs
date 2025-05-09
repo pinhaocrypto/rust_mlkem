@@ -6,11 +6,11 @@
 //! ML-KEM-512 implementation: A post-quantum key encapsulation mechanism.
 
 // Module exports
-pub mod cbd;
-pub mod ntt;
-pub mod poly;
+// pub mod cbd;
+// pub mod ntt;
+// pub mod poly;
 pub mod reduce;
-pub mod polyvec;
+// pub mod polyvec;
 
 
 // Re-export primary API

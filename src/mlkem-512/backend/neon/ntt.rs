@@ -4,10 +4,10 @@ use crate::mlkem512::zetas::ZETAS;
 use crate::mlkem512::backend::reduce::{barrett_reduce, fqmul};
 
 // Absolute exclusive upper bound for the output of the forward NTT
-pub const NTT_BOUND: i32 = 8 * Q;
+pub const NTT_BOUND: i32 = 8 * Q as i32;
 
 // Absolute exclusive upper bound for the output of the inverse NTT
-pub const INVNTT_BOUND: i32 = 8 * Q;
+pub const INVNTT_BOUND: i32 = 8 * Q as i32;
 
 /// Performs a block of Cooley–Tukey NTT butterfly operations on polynomial coefficients in-place,
 /// using a fixed twiddle factor and Montgomery multiplication.
@@ -35,6 +35,8 @@ pub const INVNTT_BOUND: i32 = 8 * Q;
 /// // start = 8, len = 4 -> pairs: (8, 12), (9, 13), (10, 14), (11, 15)
 /// // start = 4, len = 2 -> pairs: (4, 6), (5, 7)
 /// ```
+
+
 #[inline]
 pub fn ntt_butterfly_block(
     poly: &mut Poly,
@@ -66,7 +68,7 @@ pub fn ntt_layer(
 
 #[inline]
 pub fn poly_ntt(poly: &mut Poly) {
-    debug_assert!(poly.coeffs.iter().all(|&c| (c as i32).abs() < Q));
+    debug_assert!(poly.coeffs.iter().all(|&c| (c as i32).abs() < Q as i32));
 
     for layer in 1..=7 {
         ntt_layer(poly, layer);
@@ -74,7 +76,7 @@ pub fn poly_ntt(poly: &mut Poly) {
     debug_assert!(poly
         .coeffs
         .iter()
-        .all(|&c| (c as i32).abs() <= NTT_BOUND));
+        .all(|&c| (c as i32).abs() <= NTT_BOUND as i32));
 }
 
 #[inline]
@@ -104,7 +106,7 @@ pub fn invntt_layer(
     }
 
     debug_assert!(
-        coeffs.iter().all(|&c| (c as i32).abs() < Q),
+        coeffs.iter().all(|&c| (c as i32).abs() < crate::mlkem512::params::Q as i32),
         "invNTT layer output out of bound"
     );
 
@@ -126,7 +128,7 @@ pub fn invntt_tomont(poly: &mut Poly) {
 
     // final bound check: |c| < INVNTT_BOUND
     debug_assert!(
-        poly.coeffs.iter().all(|&c| (c as i32).abs() < INVNTT_BOUND),
+        poly.coeffs.iter().all(|&c| (c as i32).abs() < INVNTT_BOUND as i32),
         "invNTT output exceeded bound"
     );
 }

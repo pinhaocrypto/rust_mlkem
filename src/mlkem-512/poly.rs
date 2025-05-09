@@ -1,5 +1,5 @@
 use crate::mlkem512::backend;
-use crate::mlkem512::params::{N, Q};
+use crate::mlkem512::params::{N, Q, POLYCOMPRESSEDBYTES_DV};
 
 /// Represents a polynomial in the ring R_q = Z_q[X]/(X^n + 1)
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -9,6 +9,11 @@ pub struct Poly {
 }
 
 // Default implementation that dispatches to the appropriate optimized version
+impl Default for Poly {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Poly {
     pub fn new() -> Self {
@@ -28,10 +33,14 @@ impl Poly {
         }
     }
 
+    pub fn poly_compress(&mut self, a: &mut [u8; POLYCOMPRESSEDBYTES_DV]) {
+        backend::poly::poly_compress(self, a);
+    }
+
     #[inline]
     pub fn poly_reduce(&mut self) {
         for coeff in &mut self.coeffs {
-            let t: i16 = crate::mlkem512::backend::reduce::barrett_reduce(*coeff);
+            let t: i16 = backend::reduce::barrett_reduce(*coeff);
             let u: u16 = Poly::scalar_signed_to_unsigned_q(t);
             *coeff = u as i16;
         }
@@ -39,13 +48,13 @@ impl Poly {
 
     fn poly_add(&mut self, other: &Poly) {
         for (a, b) in self.coeffs.iter_mut().zip(other.coeffs.iter()) {
-            *a = *a + *b;
+            *a += *b;
         }
     }
 
     fn poly_sub(&mut self, other: &Poly) {
         for (a, b) in self.coeffs.iter_mut().zip(other.coeffs.iter()) {
-            *a = *a - *b;
+            *a -= *b;
         }
     }
 
@@ -73,9 +82,9 @@ impl Poly {
         backend::ntt::poly_ntt(self);
     }
 
-    // #[inline]
-    // pub fn poly_invntt_tomont(&mut self) {
-    //     backend::ntt::poly_invntt_tomont(self);
-    // }
+    #[inline]
+    pub fn poly_invntt_tomont(&mut self) {
+        backend::ntt::invntt_tomont(self);
+    }
 
 }

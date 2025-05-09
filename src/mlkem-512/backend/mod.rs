@@ -1,7 +1,7 @@
 pub mod reference;
 // pub mod avx2;
 // pub mod avx512;
-// pub mod neon;
+pub mod neon;
 
 #[cfg(feature = "clean")]
 pub use crate::mlkem_512::backend::reference::*;
