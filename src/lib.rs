@@ -22,19 +22,3 @@ pub mod mlkem512 {
     pub use crate::mlkem_512::*;
 }
 
-// todo
-// Public constants for ML-KEM variants
-// pub const MLKEM512_PUBLIC_KEY_BYTES: usize = crate::mlkem_512::PUBLIC_KEY_BYTES;
-// pub const MLKEM512_SECRET_KEY_BYTES: usize = crate::mlkem_512::SECRET_KEY_BYTES;
-// pub const MLKEM512_CIPHERTEXT_BYTES: usize = crate::mlkem_512::CIPHERTEXT_BYTES;
-// pub const MLKEM512_SHARED_SECRET_BYTES: usize = crate::mlkem_512::SHARED_SECRET_BYTES;
-
-pub const MLKEM768_PUBLIC_KEY_BYTES: usize = 1184;
-pub const MLKEM768_SECRET_KEY_BYTES: usize = 2400;
-pub const MLKEM768_CIPHERTEXT_BYTES: usize = 1088;
-pub const MLKEM768_SHARED_SECRET_BYTES: usize = 32;
-
-pub const MLKEM1024_PUBLIC_KEY_BYTES: usize = 1568;
-pub const MLKEM1024_SECRET_KEY_BYTES: usize = 3168;
-pub const MLKEM1024_CIPHERTEXT_BYTES: usize = 1568;
-pub const MLKEM1024_SHARED_SECRET_BYTES: usize = 32;
