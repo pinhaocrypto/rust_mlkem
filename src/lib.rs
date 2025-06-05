@@ -1,24 +1,38 @@
-/*
- * Copyright (c) 2024-2025 The mlkem-native project authors
- * SPDX-License-Identifier: Apache-2.0
- */
+//! # ML-KEM: Module-Lattice based Key Encapsulation Mechanism
+//!
+//! A Rust implementation of the ML-KEM post-quantum cryptographic algorithm with
+//! architecture-specific optimizations.
+//!
+//! ## Features
+//!
+//! This crate provides:
+//! - **ML-KEM-512, ML-KEM-768, ML-KEM-1024** parameter sets
+//! - **Architecture-specific optimizations** (AVX2, NEON)
+//! - **Automatic backend selection** at compile time
+//! - **Cross-platform compatibility** with fallback to reference implementation
+//! - **No-std support** for embedded environments
+//!
+//! ## Architecture Support
+//!
+//! | Architecture | Optimized Backend | Auto-Detection |
+//! |--------------|-------------------|----------------|
+//! | x86_64/x86   | AVX2              | ✅             |
+//! | aarch64      | NEON              | ✅             |
+//! | Others       | Reference         | ✅             |
+//!
 
-//! ML-KEM: Module-Lattice based Key Encapsulation Mechanism
-//! Post-quantum cryptographic algorithm standardized by NIST
 
-#![forbid(unsafe_code)]
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+// #![deny(missing_docs)]
+#![warn(clippy::all)]
+#![allow(clippy::too_many_arguments)]
 
-// Reference the ML-KEM-512 implementation using the path attribute
-// #[path = "mlkem-512/clean/mod.rs"]
-#[path = "mlkem-512/mod.rs"]
-pub mod mlkem_512;
+// ============================================================================
+// Module declarations
+// ============================================================================
 
-// Re-export primary API from mlkem_512
-// pub use mlkem_512::{keypair, encapsulate, decapsulate};
-
-// Provide a more convenient alias
-pub mod mlkem512 {
-    pub use crate::mlkem_512::*;
-}
+pub mod backend;
+pub mod common;
+pub mod mlkem;
 

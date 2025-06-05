@@ -15,21 +15,23 @@ name = "mlkem"
 path = "src/lib.rs"
 
 [features]
-default = ["clean"]
-clean = []
-avx2 = []
-neon = []
-avx512 = []
+default = ["reference", "mlkem512"]
+reference = []
+native = []
+neon = ["native"]
+mlkem512 = []
+mlkem768 = []
+mlkem1024 = []
+serde = ["dep:serde"]
 
 [dependencies]
+criterion = "0.6.0"
 sha3 = "0.10.8"
 rand = "0.9.0"
 rand_chacha = "0.9.0"
 byteorder = "1.5.0"
 pretty_assertions = "1.3.0"
-thiserror = "1.0.48"
+thiserror = "2.0.12"
 zeroize = { version = "1.6.0", features = ["zeroize_derive"] }
+serde = { version = "1.0", features = ["derive"], optional = true }
 
-[[example]]
-name = "simple_kem"
-path = "examples/simple_kem.rs"
